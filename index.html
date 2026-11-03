@@ -17,8 +17,8 @@ h1{font-size:clamp(25px,4vw,38px);margin:0;letter-spacing:-.8px}.sub{color:var(-
 .global{background:linear-gradient(135deg,#1c2c46,#172238);border:1px solid #344663;border-radius:20px;padding:20px;margin-bottom:22px;display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}
 .global h2{margin:0 0 5px;font-size:18px}.global p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
 .potion-state{font-size:25px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;margin-top:8px}
-.potion-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-button{border:0;border-radius:12px;padding:12px 16px;font-weight:750;font-size:14px;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent;}
+.potion-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+button{border:0;border-radius:12px;padding:10px 14px;font-weight:750;font-size:13px;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent;}
 button:hover{filter:brightness(1.08);transform:translateY(-1px)}button:active{transform:translateY(0)}
 .primary{background:linear-gradient(135deg,#f5c451,#e89b31);color:#241a08;box-shadow:0 6px 20px #e89b3125}
 .secondary{background:#293852;color:#e7efff;border:1px solid #40516e}.danger{background:#482b38;color:#ffc3c3;border:1px solid #70404d}
@@ -60,13 +60,15 @@ input:focus{outline:2px solid #6087c5;border-color:transparent}
   <section class="global">
     <div>
       <h2>🧪 İnşaatçı İksiri</h2>
-      <p>Her basışta tüm çalışan inşaatçılar 1 saat boyunca 10× hızlanır. Yeni iksir, mevcut sürenin sonuna eklenir.</p>
+      <p>Her basışta tüm çalışan inşaatçılar 1 saat boyunca 10× hızlanır. İksir süresini dilediğin gibi artırıp azaltabilirsin.</p>
       <div class="potion-state" id="potionTime">Aktif değil</div>
       <div class="smallmuted" id="potionMeta">Henüz iksir kullanılmadı.</div>
       <div class="potion-actions">
         <button class="primary" id="potionBtn">⚡ İksir Bas (+1 sa)</button>
-        <button class="secondary" id="potionMinusBtn">➖ 1 İksir Azalt (-1 sa)</button>
-        <button class="danger" id="potionResetBtn">↺ İksirleri Sıfırla</button>
+        <button class="secondary" id="potionPlus10">➕ 10 dk</button>
+        <button class="secondary" id="potionMinus10">➖ 10 dk</button>
+        <button class="secondary" id="potionCustomBtn">✏️ Süre Ayarla</button>
+        <button class="danger" id="potionResetBtn">↺ Sıfırla</button>
       </div>
     </div>
   </section>
@@ -74,14 +76,14 @@ input:focus{outline:2px solid #6087c5;border-color:transparent}
   <main class="grid" id="builders"></main>
   
   <div class="footer">
-    <div>Veriler bu tarayıcıda saklanır. Sayfayı kapatsan bile sayaçlar geçen süreyi hesaba katar[cite: 1].</div>
+    <div>Veriler tarayıcında saklanır. Sayfayı kapatsan bile sayaçlar hesaba katılır[cite: 1].</div>
     <button class="danger" id="resetAllBtn" style="padding: 10px 14px; font-size: 12px; white-space: nowrap;">🗑️ Tümünü Sıfırla</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
-const KEY='coc_builder_tracker_v13';
+const KEY='coc_builder_tracker_v15';
 const BUILDER_COUNT = 7;
 const pad=n=>String(n).padStart(2,'0');
 const fmt=s=>{
@@ -434,21 +436,41 @@ document.addEventListener('DOMContentLoaded', () => {
     initAudio();
     applyElapsed(Date.now());
     state.potion = (state.potion || 0) + 3600;
-    state.potionsUsed = (state.potionsUsed || 0) + 1;
+    state.potionsUsed = (state.potion || 0) > 0 ? (state.potionsUsed || 0) + 1 : 1;
     save(); updateUI();
-    toast('İksir eklendi!');
+    toast('İksir eklendi (+1 sa)!');
   });
 
-  document.getElementById('potionMinusBtn').addEventListener('click', () => {
+  document.getElementById('potionPlus10').addEventListener('click', () => {
     initAudio();
     applyElapsed(Date.now());
-    if((state.potion || 0) >= 3600){
-      state.potion -= 3600;
-      state.potionsUsed = Math.max(0, (state.potionsUsed || 1) - 1);
-      save(); updateUI();
-      toast('İksir düşürüldü.');
-    } else {
-      toast('Aktif iksir yok.');
+    state.potion = (state.potion || 0) + 600;
+    save(); updateUI();
+    toast('İksir süresine +10 dk eklendi.');
+  });
+
+  document.getElementById('potionMinus10').addEventListener('click', () => {
+    initAudio();
+    applyElapsed(Date.now());
+    state.potion = Math.max(0, (state.potion || 0) - 600);
+    save(); updateUI();
+    toast('İksir süresinden 10 dk düşürüldü.');
+  });
+
+  document.getElementById('potionCustomBtn').addEventListener('click', () => {
+    initAudio();
+    const currentHours = ((state.potion || 0) / 3600).toFixed(2);
+    const userInput = prompt(`Mevcut aktif iksir süresi: ${currentHours} saat.\n\nİstediğiniz yeni süreyi TOPLAM SAAT cinsinden girin (Örn: 2.5 veya 1.25):`, currentHours);
+    if(userInput !== null) {
+      const parsed = parseFloat(userInput);
+      if(!isNaN(parsed) && parsed >= 0) {
+        applyElapsed(Date.now());
+        state.potion = Math.round(parsed * 3600);
+        save(); updateUI();
+        toast('İksir süresi güncellendi.');
+      } else {
+        alert('Geçerli bir sayı girmelisiniz.');
+      }
     }
   });
 
