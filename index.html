@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#111827">
+<title>COC İnşaat Takipçisi</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#151d30;--panel2:#1d2940;--line:#2c3a55;--muted:#9aa9c2;--text:#eef4ff;--green:#45d483;--gold:#f6c453;--red:#ff7373}
+*{box-sizing:border-box}
+html, body {margin:0; padding:0; width:100%; min-height:100%; overflow-x:hidden;}
+body{background:radial-gradient(ellipse at top,#182844 0,#0b1020 55%);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text);-webkit-text-size-adjust:100%;}
+.wrap{max-width:1120px;margin:auto;padding:28px 18px 60px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:22px}
+h1{font-size:clamp(25px,4vw,38px);margin:0;letter-spacing:-.8px}.sub{color:var(--muted);margin-top:5px;font-size:14px}
+.pill-group{display:flex;gap:8px;flex-wrap:wrap}
+.pill{border:1px solid #35506c;background:#152b3b;color:#a8f2c8;border-radius:99px;padding:7px 12px;font-size:12px;white-space:nowrap;cursor:pointer}
+.global{background:linear-gradient(135deg,#1c2c46,#172238);border:1px solid #344663;border-radius:20px;padding:20px;margin-bottom:22px;display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}
+.global h2{margin:0 0 5px;font-size:18px}.global p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.potion-state{font-size:25px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;margin-top:8px}
+.potion-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+button{border:0;border-radius:12px;padding:12px 16px;font-weight:750;font-size:14px;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent;}
+button:hover{filter:brightness(1.08);transform:translateY(-1px)}button:active{transform:translateY(0)}
+.primary{background:linear-gradient(135deg,#f5c451,#e89b31);color:#241a08;box-shadow:0 6px 20px #e89b3125}
+.secondary{background:#293852;color:#e7efff;border:1px solid #40516e}.danger{background:#482b38;color:#ffc3c3;border:1px solid #70404d}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+
+.card{background:linear-gradient(160deg,#172238,#121a2b);border:1px solid var(--line);border-radius:18px;padding:17px;min-width:0;transition:all .3s}
+.card.alarm-active{border:2px solid var(--red);background:linear-gradient(160deg,#3d1c24,#121a2b);box-shadow:0 0 30px rgba(255,115,115,0.35);animation:cardPulse 1.2s infinite}
+@keyframes cardPulse{0%{transform:scale(1)}50%{transform:scale(1.01)}100%{transform:scale(1)}}
+
+.cardhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
+.cardhead h3{margin:0;font-size:17px}.status{font-size:11px;padding:5px 9px;border-radius:99px;background:#26344a;color:#b9c6da}.status.run{background:#153d32;color:#8cf0b9}.status.done{background:#3c3040;color:#e4b9ff}
+label{display:block;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+input{width:100%;background:#0d1525;border:1px solid #35445f;color:var(--text);border-radius:10px;padding:10px 11px;font:inherit;min-width:0;-webkit-appearance:none;}
+input:focus{outline:2px solid #6087c5;border-color:transparent}
+.name{margin-bottom:12px}.duration{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.timer{font-size:clamp(25px,4vw,34px);font-weight:850;letter-spacing:-1px;font-variant-numeric:tabular-nums;margin:16px 0 3px}
+.smallmuted{font-size:12px;color:var(--muted)}
+.progress{height:6px;background:#0b1220;border-radius:99px;overflow:hidden;margin:12px 0 14px}.bar{height:100%;width:0;background:linear-gradient(90deg,#43d58b,#b5e978);border-radius:99px;transition:width .3s}
+.estimates{border-top:1px solid #2b3850;padding-top:12px;margin-top:12px;display:grid;gap:8px}
+.estimate{display:flex;justify-content:space-between;gap:12px;font-size:12px}.estimate span:first-child{color:var(--muted)}.estimate strong{font-variant-numeric:tabular-nums;text-align:right}.boosted{color:var(--green)}
+.actions{display:flex;gap:8px;margin-top:15px}.actions button{flex:1;padding:10px 9px;font-size:12px}
+
+.footer{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;color:var(--muted);font-size:12px;line-height:1.6;margin-top:22px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#eaf8f0;color:#10251b;padding:11px 16px;border-radius:12px;font-weight:700;font-size:13px;box-shadow:0 8px 30px #0007;opacity:0;pointer-events:none;transition:.2s;z-index:9999}.toast.show{opacity:1}
+
+@media(max-width:700px){.wrap{padding:20px 12px 40px}.grid{grid-template-columns:1fr}.global{grid-template-columns:1fr}.global .potion-actions{flex-direction:column}.top{align-items:flex-start;flex-direction:column}.card{padding:15px}.footer{flex-direction:column;align-items:stretch;text-align:center}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><h1>⚒️ COC İnşaat Takipçisi</h1><div class="sub">7 inşaatçını, yükseltmelerini ve iksirlerini tek yerden takip et.</div></div>
+    <div class="pill-group">
+      <div class="pill" id="audioInitBtn">🔊 Sesi Aç</div>
+      <div class="pill" id="notifBtn">🔔 Bildirim</div>
+    </div>
+  </header>
+
+  <section class="global">
+    <div>
+      <h2>🧪 İnşaatçı İksiri</h2>
+      <p>Her basışta tüm çalışan inşaatçılar 1 saat boyunca 10× hızlanır. Yeni iksir, mevcut sürenin sonuna eklenir.</p>
+      <div class="potion-state" id="potionTime">Aktif değil</div>
+      <div class="smallmuted" id="potionMeta">Henüz iksir kullanılmadı.</div>
+      <div class="potion-actions">
+        <button class="primary" id="potionBtn">⚡ İksir Bas (+1 sa)</button>
+        <button class="secondary" id="potionMinusBtn">➖ 1 İksir Azalt (-1 sa)</button>
+        <button class="danger" id="potionResetBtn">↺ İksirleri Sıfırla</button>
+      </div>
+    </div>
+  </section>
+
+  <main class="grid" id="builders"></main>
+  
+  <div class="footer">
+    <div>Veriler bu tarayıcıda saklanır. Sayfayı kapatsan bile sayaçlar geçen süreyi hesaba katar[cite: 1].</div>
+    <button class="danger" id="resetAllBtn" style="padding: 10px 14px; font-size: 12px; white-space: nowrap;">🗑️ Tümünü Sıfırla</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='coc_builder_tracker_v13';
+const BUILDER_COUNT = 7;
+const pad=n=>String(n).padStart(2,'0');
+const fmt=s=>{
+  s=Math.max(0,Math.floor(s));
+  const d=Math.floor(s/86400);s%=86400;
+  const h=Math.floor(s/3600);s%=3600;
+  const m=Math.floor(s/60), sec=s%60;
+  return `${d?d+'g ':''}${pad(h)}:${pad(m)}:${pad(sec)}`;
+};
+const fmtHoursAndMinutes=s=>{
+  s=Math.max(0,Math.floor(s));
+  const totalHours=Math.floor(s/3600);
+  const m=Math.floor((s%3600)/60);
+  const d=Math.floor(totalHours/24);
+  const h=totalHours%24;
+  if(d>0) return `${d} gün ${h} sa ${m} dk`;
+  return `${h} sa ${m} dk`;
+};
+const dateFmt=ms=>new Date(ms).toLocaleString('tr-TR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+const blank=()=>({name:'',remaining:0,total:0,running:false,notified:false,alarmActive:false});
+let state={builders:Array.from({length:BUILDER_COUNT},blank),potion:0,last:Date.now(),potionsUsed:0};
+
+let globalAlarmInterval = null;
+let audioCtx = null;
+let alarmTimeouts = {};
+
+function initAudio(){
+  try {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if(audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = 440;
+    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.1);
+
+    document.getElementById('audioInitBtn').textContent = '✅ Ses Aktif';
+    toast('Ses altyapısı etkinleştirildi!');
+  } catch(e) {
+    toast('Ses açılamadı.');
+  }
+}
+
+function load(){
+ try{
+   const x = JSON.parse(localStorage.getItem(KEY));
+   if(x && Array.isArray(x.builders) && x.builders.length === BUILDER_COUNT){
+     state = {...state, ...x};
+     state.builders = state.builders.map(b => ({...blank(), ...b}));
+   }
+ }catch(e){}
+ applyElapsed(Date.now());
+ save();
+}
+
+function save(){
+  state.last = Date.now();
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+
+function checkAndPlayAlarmAudio(){
+  const anyAlarm = state.builders.some(b => b.alarmActive);
+  if(anyAlarm) {
+    if(!globalAlarmInterval) {
+      playToneSequence();
+      globalAlarmInterval = setInterval(playToneSequence, 1200);
+    }
+  } else {
+    if(globalAlarmInterval) {
+      clearInterval(globalAlarmInterval);
+      globalAlarmInterval = null;
+    }
+  }
+}
+
+function playToneSequence(){
+  try{
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if(audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    const now = audioCtx.currentTime;
+    [0, 0.2, 0.4].forEach((offset, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.value = idx === 2 ? 1320 : 880;
+      gain.gain.setValueAtTime(0.4, now + offset);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.18);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.18);
+    });
+  }catch(e){}
+}
+
+function stopBuilderAlarm(i){
+  state.builders[i].alarmActive = false;
+  if(alarmTimeouts[i]){
+    clearTimeout(alarmTimeouts[i]);
+    delete alarmTimeouts[i];
+  }
+  checkAndPlayAlarmAudio();
+}
+
+function triggerNotification(title, body){
+  if(window.Notification && Notification.permission === 'granted'){
+    new Notification(title, { body });
+  }
+}
+
+function requestNotif(){
+  if(window.Notification){
+    Notification.requestPermission().then(permission => {
+      if(permission === 'granted'){
+        document.getElementById('notifBtn').textContent = '🔔 Bildirim Açık';
+        toast('Bildirimler etkinleştirildi!');
+      } else {
+        toast('Bildirim izni reddedildi.');
+      }
+    });
+  } else {
+    toast('Tarayıcınız bildirim desteklemiyor.');
+  }
+}
+
+function applyElapsed(now){
+ const elapsed = Math.max(0, (now - (state.last || now)) / 1000);
+ if(!elapsed) return;
+ const boosted = Math.min(elapsed, state.potion || 0), normal = elapsed - boosted;
+ 
+ state.builders.forEach((b, i) => {
+   if(b.running && b.remaining > 0){
+     b.remaining = Math.max(0, b.remaining - boosted * 10 - normal);
+     if(b.remaining <= 0 && !b.notified){
+       b.remaining = 0;
+       b.running = false;
+       b.notified = true;
+       b.alarmActive = true;
+       
+       const bName = b.name ? b.name : `İnşaatçı ${i+1}`;
+       triggerNotification('⚒️ İnşaat Tamamlandı!', `"${bName}" yükseltmesi bitti!`);
+       
+       if(alarmTimeouts[i]) clearTimeout(alarmTimeouts[i]);
+       alarmTimeouts[i] = setTimeout(() => {
+         stopBuilderAlarm(i);
+         save();
+         updateUI();
+       }, 3 * 60 * 1000);
+     }
+   }
+   if(b.remaining <= 0 && b.running){
+     b.running = false;
+   }
+ });
+ 
+ state.potion = Math.max(0, (state.potion || 0) - boosted);
+ state.last = now;
+}
+
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1900);
+}
+
+function setDurationFromInputs(i){
+ const d = Number(document.getElementById(`d_${i}`).value) || 0;
+ const h = Number(document.getElementById(`h_${i}`).value) || 0;
+ const m = Number(document.getElementById(`m_${i}`).value) || 0;
+ return Math.max(0, d*86400 + h*3600 + m*60);
+}
+
+function cardHTML(b, i){
+ const status = b.remaining <= 0 ? 'Tamamlandı' : b.running ? 'Çalışıyor' : 'Duraklatıldı';
+ const cls = b.remaining <= 0 ? 'done' : b.running ? 'run' : '';
+ const alarmClass = b.alarmActive ? 'alarm-active' : '';
+ 
+ return `<section class="card ${alarmClass}" id="card_${i}" data-i="${i}">
+ <div class="cardhead"><h3>🔨 İnşaatçı ${i+1}</h3><span class="status ${cls}" id="status_${i}">${status}</span></div>
+ <div class="name"><label>Yükseltme / bina adı</label><input class="builder-name-input" id="nameInput_${i}" data-i="${i}" maxlength="55" placeholder="Örn. Okçu Kulesi" value="${esc(b.name)}"></div>
+ <label>Kalan süreyi gir (gün / saat / dakika)</label>
+ <div class="duration">
+ <div><input id="d_${i}" type="number" pattern="[0-9]*" min="0" max="999" placeholder="Gün"></div>
+ <div><input id="h_${i}" type="number" pattern="[0-9]*" min="0" max="23" placeholder="Saat"></div>
+ <div><input id="m_${i}" type="number" pattern="[0-9]*" min="0" max="59" placeholder="Dakika"></div>
+ </div>
+ <div class="timer" id="timer_${i}">${fmt(b.remaining)}</div><div class="smallmuted">Anlık kalan süre</div>
+ <div class="progress"><div class="bar" id="bar_${i}" style="width:${b.total ? Math.max(0, Math.min(100, (1 - b.remaining/b.total)*100)) : 0}%"></div></div>
+ <div class="estimates">
+  <div class="estimate"><span>Normal bitiş (iksirsiz)</span><strong id="normal_${i}">—</strong></div>
+  <div class="estimate"><span>Mevcut iksirlerle bitiş</span><strong class="boosted" id="boosted_${i}">—</strong></div>
+ </div>
+ <div class="actions">
+  <button class="secondary" type="button" onclick="startBuilder(${i})">▶ Başlat</button>
+  <button class="secondary" type="button" onclick="pauseBuilder(${i})">Ⅱ Duraklat</button>
+  <button class="danger" type="button" onclick="resetBuilder(${i})">↺ Sıfırla</button>
+ </div>
+ </section>`;
+}
+
+function esc(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function render(){
+ const container = document.getElementById('builders');
+ if(!container) return;
+ container.innerHTML = state.builders.map((b, i) => cardHTML(b, i)).join('');
+ 
+ document.querySelectorAll('.builder-name-input').forEach(input => {
+  input.addEventListener('input', e => {
+   const idx = Number(e.target.getAttribute('data-i'));
+   state.builders[idx].name = e.target.value;
+   save();
+  });
+ });
+ updateUI();
+}
+
+function startBuilder(i){
+ initAudio();
+ applyElapsed(Date.now());
+ const b = state.builders[i];
+ const val = setDurationFromInputs(i);
+ const nameInputVal = document.getElementById(`nameInput_${i}`).value;
+ 
+ stopBuilderAlarm(i);
+ b.name = nameInputVal;
+ 
+ if(b.remaining > 0){
+   b.running = true; b.notified = false;
+   save(); updateUI(); toast(`İnşaatçı ${i+1} devam ediyor.`);
+ } else if(val > 0){
+   b.remaining = val; b.total = val; b.running = true; b.notified = false;
+   save(); updateUI(); toast(`İnşaatçı ${i+1} başlatıldı.`);
+ } else {
+   toast('Önce gün, saat veya dakika cinsinden süre gir.');
+ }
+ checkAndPlayAlarmAudio();
+}
+
+function pauseBuilder(i){
+ initAudio();
+ applyElapsed(Date.now());
+ state.builders[i].running = false;
+ save(); updateUI();
+ toast(`İnşaatçı ${i+1} duraklatıldı.`);
+}
+
+function resetBuilder(i){
+ initAudio();
+ stopBuilderAlarm(i);
+ state.builders[i] = blank();
+ save(); 
+ const nInput = document.getElementById(`nameInput_${i}`);
+ const dInput = document.getElementById(`d_${i}`);
+ const hInput = document.getElementById(`h_${i}`);
+ const mInput = document.getElementById(`m_${i}`);
+ if(nInput) nInput.value = '';
+ if(dInput) dInput.value = '';
+ if(hInput) hInput.value = '';
+ if(mInput) mInput.value = '';
+ updateUI();
+ checkAndPlayAlarmAudio();
+ toast(`İnşaatçı ${i+1} sıfırlandı.`);
+}
+
+function getBoostedRemainingSeconds(remaining, boostSeconds) {
+  if (remaining <= 0) return 0;
+  const workDuringBoost = boostSeconds * 10;
+  if (remaining <= workDuringBoost) {
+    return remaining / 10;
+  }
+  return boostSeconds + (remaining - workDuringBoost);
+}
+
+function finishAt(remaining, boostSeconds, now){
+ if(remaining <= 0) return now;
+ const workDuringBoost = boostSeconds * 10;
+ if(remaining <= workDuringBoost) return now + (remaining / 10) * 1000;
+ return now + boostSeconds * 1000 + (remaining - workDuringBoost) * 1000;
+}
+
+function updateUI(){
+ const now = Date.now(), p = state.potion || 0;
+ const pt = document.getElementById('potionTime');
+ if(pt) pt.textContent = p > 0 ? fmt(p) : 'Aktif değil';
+ 
+ const pMeta = document.getElementById('potionMeta');
+ if(pMeta) {
+   pMeta.textContent = p > 0 ? `${(p/3600).toFixed(2)} saatlik iksir süresi kaldı · Toplam ${state.potionsUsed || 0} iksir kullanıldı` : `Toplam ${state.potionsUsed || 0} iksir kullanıldı.`;
+ }
+ 
+ if(window.Notification && Notification.permission === 'granted'){
+   const nBtn = document.getElementById('notifBtn');
+   if(nBtn) nBtn.textContent = '🔔 Bildirim Açık';
+ }
+
+ state.builders.forEach((b, i) => {
+  const t = document.getElementById(`timer_${i}`);
+  if(!t) return;
+  t.textContent = fmt(b.remaining);
+  
+  const cardEl = document.getElementById(`card_${i}`);
+  if(cardEl){
+    if(b.alarmActive) cardEl.classList.add('alarm-active');
+    else cardEl.classList.remove('alarm-active');
+  }
+
+  const st = document.getElementById(`status_${i}`);
+  if(st){
+    st.textContent = b.remaining <= 0 ? 'Tamamlandı' : b.running ? 'Çalışıyor' : 'Duraklatıldı';
+    st.className = 'status ' + (b.remaining <= 0 ? 'done' : b.running ? 'run' : '');
+  }
+  const barEl = document.getElementById(`bar_${i}`);
+  if(barEl){
+    const pct = b.total ? Math.max(0, Math.min(100, (1 - b.remaining / b.total)*100)) : 0;
+    barEl.style.width = pct + '%';
+  }
+  const normalEl = document.getElementById(`normal_${i}`);
+  const boostedEl = document.getElementById(`boosted_${i}`);
+  if(b.remaining > 0){
+   if(normalEl) normalEl.textContent = dateFmt(now + b.remaining * 1000);
+   const boostedSecs = getBoostedRemainingSeconds(b.remaining, p);
+   const timeStr = fmtHoursAndMinutes(boostedSecs);
+   if(boostedEl) boostedEl.textContent = `${dateFmt(finishAt(b.remaining, p, now))} (${timeStr} kaldı)`;
+  }else{
+   if(normalEl) normalEl.textContent = '—';
+   if(boostedEl) boostedEl.textContent = '—';
+  }
+ });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('audioInitBtn').addEventListener('click', initAudio);
+  document.getElementById('notifBtn').addEventListener('click', requestNotif);
+  
+  document.getElementById('potionBtn').addEventListener('click', () => {
+    initAudio();
+    applyElapsed(Date.now());
+    state.potion = (state.potion || 0) + 3600;
+    state.potionsUsed = (state.potionsUsed || 0) + 1;
+    save(); updateUI();
+    toast('İksir eklendi!');
+  });
+
+  document.getElementById('potionMinusBtn').addEventListener('click', () => {
+    initAudio();
+    applyElapsed(Date.now());
+    if((state.potion || 0) >= 3600){
+      state.potion -= 3600;
+      state.potionsUsed = Math.max(0, (state.potionsUsed || 1) - 1);
+      save(); updateUI();
+      toast('İksir düşürüldü.');
+    } else {
+      toast('Aktif iksir yok.');
+    }
+  });
+
+  document.getElementById('potionResetBtn').addEventListener('click', () => {
+    initAudio();
+    applyElapsed(Date.now());
+    state.potion = 0;
+    state.potionsUsed = 0;
+    save(); updateUI();
+    toast('İksirler sıfırlandı.');
+  });
+
+  document.getElementById('resetAllBtn').addEventListener('click', () => {
+    initAudio();
+    if(confirm('Tüm veriler sıfırlanacak?')){
+      state.builders.forEach((_, idx) => stopBuilderAlarm(idx));
+      state.builders = Array.from({length: BUILDER_COUNT}, blank);
+      save(); render();
+      checkAndPlayAlarmAudio();
+      toast('Tüm veriler sıfırlandı.');
+    }
+  });
+
+  load();
+  render();
+  
+  setInterval(() => {
+    applyElapsed(Date.now());
+    save();
+    updateUI();
+    checkAndPlayAlarmAudio();
+  }, 250);
+});
+</script>
+</body>
+</html>
